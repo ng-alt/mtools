@@ -27,6 +27,8 @@
 #include "nameclash.h"
 #include "file_name.h"
 
+#define USB_VOL_NAME_FILE   "/tmp/usb_vol_name/%s"  /*  added pling 05/06/2009 */
+
 void label_name(doscp_t *cp, const char *filename, int verbose,
 		int *mangled, dos_name_t *ans)
 {
@@ -115,6 +117,14 @@ void mlabel(int argc, char **argv, int type)
 	int isRo=0;
 	int *isRop=NULL;
 
+    /*  added start pling 05/06/2009 */
+    char sd_name[32];
+    char vol_name[64];
+
+    memset(sd_name, 0, sizeof(sd_name));
+    memset(vol_name, 0, sizeof(vol_name));
+    /*  added end pling 05/06/2009 */
+
 	init_clash_handling(&ch);
 	ch.name_converter = label_name;
 	ch.ignore_entry = -2;
@@ -129,6 +139,7 @@ void mlabel(int argc, char **argv, int type)
 		switch (c) {
 			case 'i':
 				set_cmd_line_image(optarg, 0);
+                strcpy(sd_name, optarg);    //  added pling 05/06/2009
 				break;
 			case 'v':
 				verbose = 1;
@@ -196,14 +207,38 @@ void mlabel(int argc, char **argv, int type)
 	}
 
 	if(show || interactive){
-		if(isNotFound(&entry))
+		if(isNotFound(&entry)) {
 			printf(" Volume has no label\n");
-		else if (*longname)
+            strcpy(vol_name, "");
+        }
+		else if (*longname) {
 			printf(" Volume label is %s (abbr=%s)\n",
 			       longname, shortname);
-		else
+            strcpy(vol_name, longname);
+        }
+		else {
 			printf(" Volume label is %s\n",  shortname);
+            strcpy(vol_name, shortname);
+        }
 
+        /*  added start pling 05/06/2009 */
+        /* Store the volume label in a file under /tmp */
+        FILE *fp = NULL;
+        char *devname;
+        char filename[64];
+
+        if (strlen(sd_name)) {
+            devname = strstr(sd_name, "sd");
+            if (devname) {
+                sprintf(filename, USB_VOL_NAME_FILE, devname);
+                fp = fopen(filename, "w");
+                if (fp != NULL) {
+                    fprintf(fp, "%s\n", vol_name);
+                    fclose(fp);
+                }
+            }
+        }   
+        /*  added end pling 05/06/2009 */
 	}
 
 	/* ask for new label */

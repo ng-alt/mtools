@@ -54,7 +54,7 @@ static int token_nr; /* number of tokens in line */
 static char default_drive='\0'; /* default drive */
 
 /* "environment" variables */
-unsigned int mtools_skip_check=0;
+unsigned int mtools_skip_check=1;       
 unsigned int mtools_fat_compatibility=0;
 unsigned int mtools_ignore_short_case=0;
 unsigned int mtools_rate_0=0;
